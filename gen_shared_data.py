@@ -35,8 +35,34 @@ def main():
     x = torch.randn(PATTERN, BATCH, LENGTH, DIM, dtype=DTYPE, device="cuda")
 
     model = Mamba3(**CONFIG).to("cuda")
+
+    # B_bias and C_bias default to a constant 1.0 (see mamba3.py: `1+torch.zeros(...)`).
+    # Overwrite them in-place with iid Uniform(0, 1) samples so the test can catch
+    # per-element or mis-mapping of heads bugs that a uniform constant would mask. 
+    with torch.no_grad():
+        # Cannot assign the model parameter directly; otherwise, the following error will occur:
+        # TypeError: cannot assign 'torch.cuda.FloatTensor' as parameter 'B_bias' (torch.nn.Parameter or None expected)
+        #model.B_bias = torch.rand_like(model.B_bias)
+        #model.C_bias = torch.rand_like(model.C_bias)
+        """
+        Example for .copy_():
+        t = torch.tensor([1.0, 2.0, 3.0])
+        print(f"before a = t.copy_(), t = {t}") # tensor([1.0, 2.0, 3.0])
+        t.copy_(torch.tensor([4.0, 5.0, 6.0])) # copy tensor([4.0, 5.0, 6.0]) to the memory address of `t`
+        print(f"after t.copy_(), t = {t}") # tensor([4.0, 5.0, 6.0])
+        """
+        # torch.rand_like(model.B_bias) generates Uniform[0, 1) with the same shape/dtype/device as the tensor passed in.
+        model.B_bias.copy_(torch.rand_like(model.B_bias))
+        model.C_bias.copy_(torch.rand_like(model.C_bias))
+
+    # B_norm and C_norm parameters have all 1's as default values, but we don't know what the typical 
+    # distributions are, so keep it unchanged.
+
+    # D parameter has also all 1's as default values, and its values will depend on the bc_head configuration,
+    # but we don't know what is the typical distribution of it, so temporary keeping it unchanged
+
     """
-    model.state_dict() creates an ordered dictionary recording each key-value pair of 
+    model.state_dict() creates an ordered dictionary recording each key-value pair of
     the learned parameter tensor of the mamba3 block, for example:
     {
         "in_proj.weight":  tensor(shape=[...]),   # the input projection Linear layer's weight matrix
