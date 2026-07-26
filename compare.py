@@ -12,6 +12,7 @@ import torch
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 TWO_PI = 2.0 * math.pi
+ANGLE_TOL = 0.045
 
 # for taps whose values are angles in radians and already rounded by 2*pi
 # avoiding 0.0001 and 6.2832 (both of them are very close to 0 rad) to be judged as divergence
@@ -84,14 +85,14 @@ def main():
             if k in ANGULAR_KEYS:
                 # judge angular taps by the circular distance
                 cmx, cmean = circular_stats(a, b)
-                judged = cmx > 0.045
+                judged = cmx > ANGLE_TOL
                 flag = f"  circular: max {cmx:.4e} mean {cmean:.4e}"
                 worst[k] = max(worst.get(k, 0.0), cmx)
             else:
                 judged = mx > args.tol
                 flag = ""
                 worst[k] = max(worst.get(k, 0.0), mx)
-            flag += "  <-- DIVERGES" if judged > args.tol else ""
+            flag += "  <-- DIVERGES" if judged else ""
             print(f"{k:<14}{p:>8}{mx:14.4e}{mean:14.4e}{rel:14.4e}{flag}")
             # worst.get(k, 0.0) returns the value corresponding to key `k`.
             # It returns 0.0 if the key doesn't exist.
@@ -99,7 +100,10 @@ def main():
     print("\n=== worst per block across all patterns "
           "(max_abs, or circular distance for angular taps) ===")
     for k, v in worst.items():
-        flag = "  <-- DIVERGES" if v > args.tol else "  ok"
+        if k in ANGULAR_KEYS:
+            flag = "  <-- DIVERGES" if v > ANGLE_TOL else "  ok"
+        else:
+            flag = "  <-- DIVERGES" if v > args.tol else "  ok"
         note = "  (circular)" if k in ANGULAR_KEYS else ""
         print(f"{k:<14}{v:14.4e}{flag}{note}")
 
