@@ -32,4 +32,4 @@ if mamba_ssm.__file__ != expected:
 EOF
 
 python /home/m314510193/GithubMamba3Train/mamba3_compare_nano4/gen_shared_data.py
-python /home/m314510193/GithubMamba3Train/mamba3_compare_nano4/run_side.py --tag nano
+python /home/m314510193/GithubMamba3Train/mamba3_compare_nano4/run_side.py --tag nano --patterns 2
