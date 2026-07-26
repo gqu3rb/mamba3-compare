@@ -25,12 +25,15 @@ def main():
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
+    # Ctrl+F "config" and "input" in gen_shared_data.py to know the content of them:
     blob = torch.load(args.data, map_location="cpu")
     config = blob["config"]
     x_all = blob["input"].to("cuda")
 
     model = Mamba3(**config).to("cuda")
     missing, unexpected = model.load_state_dict(blob["state_dict"], strict=True)
+
+    # Switch the model to the inference mode
     model.eval()
 
     results = []
