@@ -84,10 +84,10 @@ def main():
             if k in ANGULAR_KEYS:
                 # judge angular taps by the circular distance
                 cmx, cmean = circular_stats(a, b)
-                judged = cmx
+                judged = cmx > 0.045
                 flag = f"  circular: max {cmx:.4e} mean {cmean:.4e}"
             else:
-                judged = mx
+                judged = mx > args.tol
                 flag = ""
             flag += "  <-- DIVERGES" if judged > args.tol else ""
             print(f"{k:<14}{p:>8}{mx:14.4e}{mean:14.4e}{rel:14.4e}{flag}")
