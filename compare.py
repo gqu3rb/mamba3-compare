@@ -86,14 +86,15 @@ def main():
                 cmx, cmean = circular_stats(a, b)
                 judged = cmx > 0.045
                 flag = f"  circular: max {cmx:.4e} mean {cmean:.4e}"
+                worst[k] = max(worst.get(k, 0.0), cmx)
             else:
                 judged = mx > args.tol
                 flag = ""
+                worst[k] = max(worst.get(k, 0.0), mx)
             flag += "  <-- DIVERGES" if judged > args.tol else ""
             print(f"{k:<14}{p:>8}{mx:14.4e}{mean:14.4e}{rel:14.4e}{flag}")
             # worst.get(k, 0.0) returns the value corresponding to key `k`.
             # It returns 0.0 if the key doesn't exist.
-            worst[k] = max(worst.get(k, 0.0), judged)
 
     print("\n=== worst per block across all patterns "
           "(max_abs, or circular distance for angular taps) ===")
