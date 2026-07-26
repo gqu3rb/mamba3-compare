@@ -37,8 +37,15 @@ def main():
 
     assert len(nano) == len(rtx), f"pattern count mismatch: {len(nano)} vs {len(rtx)}"
 
+    # The two sides' tap names must agree or there is nothing to compare. Warn and fall
+    # back to the intersection rather than dying with a bare KeyError at `br[k]` below.
+    kn, kr = set(nano[0]), set(rtx[0])
+    if kn != kr:
+        print(f"WARNING: tap key mismatch -- nano-only={sorted(kn - kr)}, "
+              f"rtx-only={sorted(kr - kn)}\n")
+
     # Ctrl+F "results" in run_side.py to know the content of `keys`
-    keys = list(nano[0].keys())
+    keys = [k for k in nano[0] if k in kr]
     # print the title of each column to the terminal
     # 'block':<14 prints out left-aligned "block" in a 14-character-wide column
     # 'pattern':>8 prints out right-aligned "pattern" in a 8-character-wide column
