@@ -5,10 +5,17 @@ python compare.py [--tol 1e-2]
 """
 
 import argparse
+import math
 import os
 import torch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+TWO_PI = 2.0 * math.pi
+
+# for taps whose values are angles in radians and already rounded by 2*pi
+# avoiding 0.0001 and 6.2832 (both of them are very close to 0 rad) to be judged as divergence
+ANGULAR_KEYS = {"angles_cumsum"}
 
 def stats(a, b):
     diff = (a - b).abs()
@@ -16,6 +23,13 @@ def stats(a, b):
     # (diff / denom).max().item() calculates the maximum relative error
     # relative error means how large the error of a value is comparing to the value itself
     return diff.max().item(), diff.mean().item(), (diff / denom).max().item()
+
+
+def circular_stats(a, b):
+    """Shortest angular distance between two phases, in radians. Range [0, pi]."""
+    d = (a - b).abs().remainder(TWO_PI)
+    d = torch.minimum(d, TWO_PI - d)
+    return d.max().item(), d.mean().item()
 
 
 def main():
@@ -67,16 +81,26 @@ def main():
                 print(f"{k:<14}{p:>8}  SHAPE MISMATCH {tuple(a.shape)} vs {tuple(b.shape)}")
                 continue
             mx, mean, rel = stats(a, b)
-            flag = "  <-- DIVERGES" if mx > args.tol else ""
+            if k in ANGULAR_KEYS:
+                # judge angular taps by the circular distance
+                cmx, cmean = circular_stats(a, b)
+                judged = cmx
+                flag = f"  circular: max {cmx:.4e} mean {cmean:.4e}"
+            else:
+                judged = mx
+                flag = ""
+            flag += "  <-- DIVERGES" if judged > args.tol else ""
             print(f"{k:<14}{p:>8}{mx:14.4e}{mean:14.4e}{rel:14.4e}{flag}")
             # worst.get(k, 0.0) returns the value corresponding to key `k`.
             # It returns 0.0 if the key doesn't exist.
-            worst[k] = max(worst.get(k, 0.0), mx)
+            worst[k] = max(worst.get(k, 0.0), judged)
 
-    print("\n=== worst max_abs per block across all patterns ===")
+    print("\n=== worst per block across all patterns "
+          "(max_abs, or circular distance for angular taps) ===")
     for k, v in worst.items():
         flag = "  <-- DIVERGES" if v > args.tol else "  ok"
-        print(f"{k:<14}{v:14.4e}{flag}")
+        note = "  (circular)" if k in ANGULAR_KEYS else ""
+        print(f"{k:<14}{v:14.4e}{flag}{note}")
 
 
 if __name__ == "__main__":
