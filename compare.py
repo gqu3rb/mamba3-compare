@@ -10,13 +10,6 @@ import torch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# nano accumulates RoPE angle via cumsum(Angles*DT) mod 2pi over the whole
-# sequence; rtx6000-adapt's loop currently doesn't accumulate at all, so
-# this row is expected to diverge by construction -- it's there to make
-# that gap visible as a number, not to pass/fail against --tol.
-DIAGNOSTIC_KEYS = {"rope_angle_final"}
-
-
 def stats(a, b):
     diff = (a - b).abs()
     denom = b.abs().clamp_min(1e-6)
@@ -47,19 +40,13 @@ def main():
                 print(f"{k:<14}{p:>8}  SHAPE MISMATCH {tuple(a.shape)} vs {tuple(b.shape)}")
                 continue
             mx, mean, rel = stats(a, b)
-            if k in DIAGNOSTIC_KEYS:
-                flag = "  (diagnostic, not accumulated on rtx side)"
-            else:
-                flag = "  <-- DIVERGES" if mx > args.tol else ""
+            flag = "  <-- DIVERGES" if mx > args.tol else ""
             print(f"{k:<14}{p:>8}{mx:14.4e}{mean:14.4e}{rel:14.4e}{flag}")
             worst[k] = max(worst.get(k, 0.0), mx)
 
     print("\n=== worst max_abs per block across all patterns ===")
     for k, v in worst.items():
-        if k in DIAGNOSTIC_KEYS:
-            flag = "  (diagnostic)"
-        else:
-            flag = "  <-- DIVERGES" if v > args.tol else "  ok"
+        flag = "  <-- DIVERGES" if v > args.tol else "  ok"
         print(f"{k:<14}{v:14.4e}{flag}")
 
 
