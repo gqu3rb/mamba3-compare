@@ -1,5 +1,3 @@
 *.pt
 __pycache__/
-gen_shared_data.log
-shim_check.log
-verify_unchanged.log
+*.log

@@ -2,7 +2,7 @@
 # Enable strict error handling for the local H200 script
 set -e
 
-RTX6000_HOST="Zhanghenghao"
+RTX6000_HOST="Zhanghenghao@140.116.246.191"
 LOG_FILE="$(pwd)/rtx6000_execution_$(date +%Y%m%d_%H%M%S).log"
 
 echo "========================================"
