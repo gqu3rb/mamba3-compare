@@ -43,6 +43,10 @@ echo ">> Streaming RTX6000 output below (also saving to $LOG_FILE) :"
 ssh "$RTX6000_HOST" << 'EOF' | tee "$LOG_FILE"
 set -e
 
+# Initialize Conda for this non-interactive SSH session
+# (Assuming miniconda3 is in the home directory based on your python alias)
+source ~/miniconda3/etc/profile.d/conda.sh
+
 cd ~
 source setMamba3env.sh
 
