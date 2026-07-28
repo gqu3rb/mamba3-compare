@@ -11,7 +11,7 @@ from mamba_ssm import Mamba3
 
 SEED = 123
 PATTERN, BATCH, LENGTH, DIM = 10, 2, 2048, 768
-DTYPE = torch.float16
+DTYPE = torch.float32
 
 # The meaning of each parameter can be found in
 # mamba3.py of the mamba3-note branch
