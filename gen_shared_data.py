@@ -10,7 +10,7 @@ import torch
 from mamba_ssm import Mamba3
 
 SEED = 123
-PATTERN, BATCH, LENGTH, DIM = 10, 2, 2048, 1024
+PATTERN, BATCH, LENGTH, DIM = 10, 2, 2048, 768
 DTYPE = torch.float16
 
 # The meaning of each parameter can be found in
@@ -18,14 +18,16 @@ DTYPE = torch.float16
 CONFIG = dict(
     d_model=DIM,
     d_state=128,
-    expand=2,
+    #expand=2,
     headdim=64,
-    ngroups=32,
-    rope_fraction=0.5,
     is_mimo=False,
+    mimo_rank=4,
+    chunk_size=16, # 64/mimo_rank if x is in bf16, else 32/mimo_rank
     is_outproj_norm=False,
-    chunk_size=64,
     dtype=DTYPE,
+    # comment this line to make ngroups to be default value (=1)
+    #ngroups=32,
+    #rope_fraction=0.5, # redundant: rope_fraction is 0.5 by default
 )
 
 
